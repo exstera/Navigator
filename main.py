@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog
-from xml.etree.ElementTree import Element, SubElement, ElementTree
+from xml.etree.ElementTree import Element, SubElement, ElementTree, parse
 import math
 import heapq
 from shapely.geometry import Polygon, LineString
@@ -38,6 +38,7 @@ class App:
         file_menu = tk.Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Save Map", command=self.save_map)
+        file_menu.add_command(label="Load Map", command=self.load_map)  # Новая команда
         file_menu.add_command(label="Save Route", command=self.save_route)
 
         run_menu = tk.Menu(menu_bar, tearoff=0)
@@ -97,6 +98,30 @@ class App:
         tree = ElementTree(root)
         tree.write(file_path)
 
+    # Загрузка карты из XML-файла
+    def load_map(self):
+        file_path = filedialog.askopenfilename(filetypes=[("XML files", "*.xml"), ("All files", "*.*")])
+        if not file_path:
+            return
+
+        tree = parse(file_path)
+        root = tree.getroot()
+
+        self.obstacles.clear()
+        self.canvas.delete("all")
+
+        for obstacle_elem in root.findall('obstacle'):
+            points = []
+            for point_elem in obstacle_elem.find('points').findall('point'):
+                x = float(point_elem.get('x'))
+                y = float(point_elem.get('y'))
+                points.append((x, y))
+            impermeability = float(obstacle_elem.find('impermeability').text)
+            grey_value = int(255 * (1 - impermeability / 100))
+            fill_color = f'#{grey_value:02x}{grey_value:02x}{grey_value:02x}'
+            self.canvas.create_polygon(points, outline='black', fill=fill_color)
+            self.obstacles.append(Obstacle(points, impermeability))
+
     # Сохранение маршрута в XML-файл
     def save_route(self):
         if not self.route:
@@ -155,7 +180,7 @@ class App:
     # Получение соседних точек для текущей точки
     def get_neighbors(self, point):
         neighbors = []
-        offsets = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+        offsets = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # Removed diagonal neighbors
         for dx, dy in offsets:
             neighbor = (point[0] + dx, point[1] + dy)
             if 0 <= neighbor[0] < self.canvas.winfo_width() and 0 <= neighbor[1] < self.canvas.winfo_height():
