@@ -18,9 +18,9 @@ class App:
         self.root = tk.Tk()
         self.canvas = tk.Canvas(self.root, width=800, height=600, bg="white")
         self.canvas.pack(fill=tk.BOTH, expand=True)
-        self.canvas.bind("<Button-3>", self.on_click)
+        self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.bind("<Double-1>", self.finish_obstacle)
-        self.canvas.bind("<Button-1>", self.set_start_finish)
+        self.canvas.bind("<Button-3>", self.set_start_finish)
         self.obstacles = []
         self.current_obstacle = []
         self.start = None
