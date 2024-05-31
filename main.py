@@ -3,7 +3,7 @@ from tkinter import filedialog, simpledialog
 from xml.etree.ElementTree import Element, SubElement, ElementTree, parse
 import math
 import heapq
-from shapely.geometry import Polygon, LineString
+from shapely.geometry import Polygon, LineString, Point
 
 # Класс для представления препятствия
 class Obstacle:
@@ -18,9 +18,9 @@ class App:
         self.root = tk.Tk()
         self.canvas = tk.Canvas(self.root, width=800, height=600, bg="white")
         self.canvas.pack(fill=tk.BOTH, expand=True)
-        self.canvas.bind("<Button-1>", self.on_click)
+        self.canvas.bind("<Button-3>", self.on_click)
         self.canvas.bind("<Double-1>", self.finish_obstacle)
-        self.canvas.bind("<Button-3>", self.set_start_finish)
+        self.canvas.bind("<Button-1>", self.set_start_finish)
         self.obstacles = []
         self.current_obstacle = []
         self.start = None
@@ -38,7 +38,7 @@ class App:
         file_menu = tk.Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Save Map", command=self.save_map)
-        file_menu.add_command(label="Load Map", command=self.load_map)  # Новая команда
+        file_menu.add_command(label="Load Map", command=self.load_map)
         file_menu.add_command(label="Save Route", command=self.save_route)
 
         run_menu = tk.Menu(menu_bar, tearoff=0)
@@ -180,11 +180,12 @@ class App:
     # Получение соседних точек для текущей точки
     def get_neighbors(self, point):
         neighbors = []
-        offsets = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # Removed diagonal neighbors
-        for dx, dy in offsets:
-            neighbor = (point[0] + dx, point[1] + dy)
-            if 0 <= neighbor[0] < self.canvas.winfo_width() and 0 <= neighbor[1] < self.canvas.winfo_height():
-                neighbors.append(neighbor)
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx != 0 or dy != 0:
+                    neighbor = (point[0] + dx, point[1] + dy)
+                    if 0 <= neighbor[0] < self.canvas.winfo_width() and 0 <= neighbor[1] < self.canvas.winfo_height():
+                        neighbors.append(neighbor)
         return neighbors
 
     # Вычисление расстояния между двумя точками
